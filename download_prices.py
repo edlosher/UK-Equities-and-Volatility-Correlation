@@ -1,4 +1,9 @@
 import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import yfinance as yf
 
 tickers = [
     "AZN.L", "GSK.L",            
@@ -18,13 +23,31 @@ print("Failed:", failed or "none")
 print(prices.tail().round(2))
 
 prices.to_csv("ftse_prices.csv")
-returns = prices.pct_change().dropna()
-
+returns = prices.pct_change(fill_method=None).dropna(how="all")
 print(returns.describe().T[["mean", "std"]])
 
-# Growth of £1 invested at the start
 cumulative = (1 + returns).cumprod()
 cumulative.plot(figsize=(12, 6), title="Growth of £1")
 
-import matplotlib.pyplot as plt
+rolling_vol = returns.rolling(window=30).std() * np.sqrt(252)
+rolling_vol.plot(figsize=(12, 6), title="30-day rolling volatility")
+
+corr = returns.corr()
+print(corr.round(2))
+
+# Risk/return summary
+ann_return = returns.mean() * 252
+ann_vol = returns.std() * np.sqrt(252)
+sharpe = ann_return / ann_vol
+max_dd = (cumulative / cumulative.cummax() - 1).min()
+
+summary = pd.DataFrame({
+    "Ann. return": ann_return,
+    "Ann. vol": ann_vol,
+    "Sharpe": sharpe,
+    "Max drawdown": max_dd,
+}).sort_values("Sharpe", ascending=False)
+
+print(summary.round(2))
+
 plt.show()
