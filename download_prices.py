@@ -2,8 +2,7 @@ import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import yfinance as yf
+from plot_risk import set_style, plot_rolling_vol, plot_corr
 
 tickers = [
     "AZN.L", "GSK.L",            
@@ -26,14 +25,16 @@ prices.to_csv("ftse_prices.csv")
 returns = prices.pct_change(fill_method=None).dropna(how="all")
 print(returns.describe().T[["mean", "std"]])
 
+set_style()
+
 cumulative = (1 + returns).cumprod()
 cumulative.plot(figsize=(12, 6), title="Growth of £1")
 
 rolling_vol = returns.rolling(window=30).std() * np.sqrt(252)
 rolling_vol.plot(figsize=(12, 6), title="30-day rolling volatility")
 
-corr = returns.corr()
-print(corr.round(2))
+plot_rolling_vol(prices, ["BARC.L", "SHEL.L", "AZN.L"], save_as="rolling_vol.png")
+plot_corr(prices, save_as="corr_matrix.png")
 
 # Risk/return summary
 ann_return = returns.mean() * 252
